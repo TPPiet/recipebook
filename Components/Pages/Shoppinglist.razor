@@ -1,0 +1,47 @@
+﻿@page "/shoppinglist"
+@using RecipeBook.Data
+
+<h1>Shopping list</h1>
+
+<Button @onclick="Store">Store the ingredients</Button>
+<Button @onclick="Clear">Clear the list</Button>
+
+<input placeholder="Add Item" @bind="newItem" />
+<button @onclick="AddItem">Add item</button>
+
+<ul class="list-unstyled">
+    @foreach (var item in items)
+    {
+        <li>
+            <input type="checkbox" @bind="item.IsDone" />
+            <input @bind="item.Title" />
+        </li>
+    }
+</ul>
+
+
+
+@code {
+    private List<ShoppingListItem> items = new();
+    private string? newItem;
+
+    private void AddItem()
+    {
+        if (!string.IsNullOrWhiteSpace(newItem))
+        {
+            items.Add(new ShoppingListItem { Title = newItem });
+            newItem = string.Empty;
+        }
+    }
+
+    //Store the ingredients into ingredient bank
+    private void Store()
+    {
+
+    }
+
+    private void Clear()
+    {
+        items.Clear();
+    }
+}

@@ -1,0 +1,151 @@
+﻿@page "/"
+@using RecipeBook.Data
+@inject RecipeDatabase RecipeService
+
+<h1>Recipes</h1>
+<p style="color:red">@Error</p>
+
+@if (recipes == null)
+{
+	<!-- Show this if theres no recipes -->
+    <p><em>No recipes</em></p>
+}
+else
+{
+    @foreach (var recipe in recipes)
+    {
+        <p>
+            @recipe.Name
+            <button class="btn btn-secondary" @onclick="() => EditRecipe(recipe)">Edit</button>
+        </p>
+    }
+
+    <p>
+        <button class="btn btn-success"
+            @onclick="AddNewRecipe">
+            Add New Recipe
+        </button>
+    </p>
+}
+
+<!-- Popup for adding a new recipe -->
+@if (ShowPopup)
+{
+    <div class="modal" tabindex="-1" style="display:block" role="dialog">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h3 class="modal-title">Add or edit a recipe</h3>
+                    <!-- Button to close the popup -->
+                    <button type="button" class="close"
+                            @onclick="ClosePopup">
+                        <span aria-hidden="true">X</span>
+                    </button>
+                </div>
+                <!-- Edit form for the recipe -->
+                <div class="modal-body">
+                    <input class="form-control" type="text"
+                           placeholder="Name"
+                           @bind="objRecipe.Name" />
+                    <!-- Add rest of the attributes for recipe-->
+                    <!-- Button to save the Recipe -->
+                    <button class="btn btn-success"
+                            @onclick="SaveRecipe">
+                        Save
+                    </button>&nbsp;
+                    @if (objRecipe.Id > 0)
+                    {
+                        <!-- Button to delete the recipe -->
+                        <button class="btn btn-danger"
+                                @onclick="DeleteRecipe">
+                            Delete
+                        </button>
+                    }
+                </div>
+            </div>
+        </div>
+    </div>
+}
+@code {
+    string Error = "";
+    List<Recipe> recipes = new List<Recipe>();
+    Recipe objRecipe = new Recipe();
+    bool ShowPopup = false;
+    protected override async Task OnInitializedAsync()
+    {
+        //Fetch recipes
+        recipes = await RecipeService.GetRecipeAsync();
+    }
+
+    void AddNewRecipe()
+    {
+        // Make new recipe
+        objRecipe = new Recipe();
+        // Set Id to 0 so we know it is a new recipe
+        objRecipe.Id = 0;
+        // Open the Popup
+        ShowPopup = true;
+    }
+
+    void EditRecipe(Recipe recipe)
+    {
+        //set as current recipe
+        objRecipe = recipe;
+        ShowPopup = true;
+    }
+
+    async Task DeleteRecipe()
+    {
+        //Close the popup
+        ShowPopup = false;
+        try
+        {
+            Error = "";
+            //Delete the selected recipe
+            await RecipeService.DeleteRecipeAsync(objRecipe);
+            recipes.Remove(objRecipe);
+        }
+        catch (Exception ex)
+        {
+            Error = ex.Message;
+        }
+    }
+
+    void ClosePopup()
+    {
+        // Close the Popup
+        ShowPopup = false;
+    }
+
+    async Task SaveRecipe()
+    {
+        //close the popup first
+        ShowPopup = false;
+
+        try
+        {
+            //new recipes have ID set to 
+            if (objRecipe.Id == 0)
+            {
+                //create new recipe
+                Recipe objNewRecipe = new Recipe();
+                objNewRecipe.Name = objRecipe.Name;
+                //ADD handling for other recipe attributes
+
+                //Save the result to the database
+                var NewRecipe = await RecipeService.CreateRecipeAsync(objNewRecipe);
+                //Add the recipe to the list
+                recipes.Add(NewRecipe);
+            }
+            else
+            {
+                //Updating existing recipe
+                await RecipeService.UpdateRecipeAsync(objRecipe);
+            }
+        }
+        catch (Exception ex)
+        {
+            Error = ex.Message;
+        }
+    }
+}
