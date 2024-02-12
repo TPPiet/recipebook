@@ -12,5 +12,8 @@ public class Recipe
     [PrimaryKey, AutoIncrement]
     public int Id { get; set; }
     public string Name { get; set; }
-    //TODO: Add attributes for recipes
+    public string Instructions { get; set; }
+
+    [Ignore]
+    public List<Ingredient> Ingredients { get; set; }
 }

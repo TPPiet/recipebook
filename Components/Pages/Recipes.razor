@@ -47,12 +47,40 @@ else
                     <input class="form-control" type="text"
                            placeholder="Name"
                            @bind="objRecipe.Name" />
+
+                    @foreach (var ingredient in objRecipe.Ingredients)
+                    {
+                        <div class="input-group">
+                            <input class="form-control" type="text"
+                                   placeholder="Ingredient name"
+                                   @bind="ingredient.Name" />
+                            <input class="form-control" type="number"
+                                   placeholder="Amount"
+                                   @bind="ingredient.Amount" />
+                            <select class="form-control"
+                                   @bind="ingredient.Unit">
+                                   <option value="ml">ml</option>
+                                   <option value="dl">dl</option>
+                                   <option value="l">l</option>
+                                   <option value="g">g</option>
+                                   <option value="kg">kg</option>
+                                   <option value="pcs">pcs</option>
+                                   <option value="tsp">tsp</option>
+                                   <option value="tbsp">tbsp</option>
+                                   <option value="pinch">pinch</option>
+                            </select>
+                         </div>
+                    }
+                    <button class="btn btn-primary"
+                            @onclick="AddIngredient">
+                            Add an ingredient
+                    </button>
                     <!-- Add rest of the attributes for recipe-->
                     <!-- Button to save the Recipe -->
                     <button class="btn btn-success"
                             @onclick="SaveRecipe">
-                        Save
-                    </button>&nbsp;
+                            Save
+                    </button>
                     @if (objRecipe.Id > 0)
                     {
                         <!-- Button to delete the recipe -->
@@ -70,6 +98,7 @@ else
     string Error = "";
     List<Recipe> recipes = new List<Recipe>();
     Recipe objRecipe = new Recipe();
+    List<Ingredient> objIngredient = new List<Ingredient>();
     bool ShowPopup = false;
     protected override async Task OnInitializedAsync()
     {
@@ -83,6 +112,8 @@ else
         objRecipe = new Recipe();
         // Set Id to 0 so we know it is a new recipe
         objRecipe.Id = 0;
+        //initialize the ingredient list
+        objRecipe.Ingredients = new List<Ingredient>();
         // Open the Popup
         ShowPopup = true;
     }
@@ -111,6 +142,12 @@ else
         }
     }
 
+    void AddIngredient()
+    {
+        var newIngredient = new Ingredient();
+        objRecipe.Ingredients.Add(newIngredient);
+    }
+
     void ClosePopup()
     {
         // Close the Popup
@@ -130,7 +167,7 @@ else
                 //create new recipe
                 Recipe objNewRecipe = new Recipe();
                 objNewRecipe.Name = objRecipe.Name;
-                //ADD handling for other recipe attributes
+                objNewRecipe.Ingredients = objRecipe.Ingredients;
 
                 //Save the result to the database
                 var NewRecipe = await RecipeService.CreateRecipeAsync(objNewRecipe);
