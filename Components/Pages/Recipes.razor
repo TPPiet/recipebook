@@ -1,6 +1,6 @@
 ﻿@page "/"
 @using RecipeBook.Data
-@inject RecipeDatabase RecipeService
+@inject Database DBService
 
 <h1>Recipes</h1>
 <p style="color:red">@Error</p>
@@ -98,12 +98,11 @@ else
     string Error = "";
     List<Recipe> recipes = new List<Recipe>();
     Recipe objRecipe = new Recipe();
-    List<Ingredient> objIngredient = new List<Ingredient>();
     bool ShowPopup = false;
     protected override async Task OnInitializedAsync()
     {
         //Fetch recipes
-        recipes = await RecipeService.GetRecipeAsync();
+        recipes = await DBService.GetRecipeAsync();
     }
 
     void AddNewRecipe()
@@ -118,10 +117,12 @@ else
         ShowPopup = true;
     }
 
-    void EditRecipe(Recipe recipe)
+    async Task EditRecipe(Recipe recipe)
     {
         //set as current recipe
         objRecipe = recipe;
+        //get the ingredients
+        objRecipe.Ingredients = await DBService.GetIngredientAsync(recipe.Id);
         ShowPopup = true;
     }
 
@@ -133,7 +134,7 @@ else
         {
             Error = "";
             //Delete the selected recipe
-            await RecipeService.DeleteRecipeAsync(objRecipe);
+            await DBService.DeleteRecipeAsync(objRecipe);
             recipes.Remove(objRecipe);
         }
         catch (Exception ex)
@@ -170,14 +171,14 @@ else
                 objNewRecipe.Ingredients = objRecipe.Ingredients;
 
                 //Save the result to the database
-                var NewRecipe = await RecipeService.CreateRecipeAsync(objNewRecipe);
+                var NewRecipe = await DBService.CreateRecipeAsync(objRecipe);
                 //Add the recipe to the list
                 recipes.Add(NewRecipe);
             }
             else
             {
                 //Updating existing recipe
-                await RecipeService.UpdateRecipeAsync(objRecipe);
+                await DBService.UpdateRecipeAsync(objRecipe);
             }
         }
         catch (Exception ex)

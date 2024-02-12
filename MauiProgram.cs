@@ -23,8 +23,8 @@ namespace RecipeBook
                     Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
                     @"Recipes.db");
             // Register RecipeService and the SQLite database
-            builder.Services.AddSingleton<RecipeDatabase>(
-                s => ActivatorUtilities.CreateInstance<RecipeDatabase>(s, dbPath));
+            builder.Services.AddSingleton<Database>(
+                s => ActivatorUtilities.CreateInstance<Database>(s, dbPath));
 
 #if DEBUG
             builder.Services.AddBlazorWebViewDeveloperTools();

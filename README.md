@@ -14,9 +14,11 @@ Done:
 - SQLite db creation and CRUD
 - Recipe page, adding, editing, and deleting recipes
 - Shopping list page, list with checkbox
+- Add rest of the definitions for recipe (ingredients, amounts, instructions)
+- Ingredients SQLite table and methods added
 
 TODO next:
-- Add rest of the definitions for recipe (ingredients, amounts, instructions)
+
 - Viewing recipe, new page with active recipe, to allow browsing and coming back to it
 - Add recipe ingredients to the shopping list
 - Ingredient storage
