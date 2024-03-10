@@ -15,5 +15,5 @@ public class Recipe
     public string Instructions { get; set; }
 
     [Ignore]
-    public List<Ingredient> Ingredients { get; set; }
+    public List<RecipeIngredient> Ingredients { get; set; }
 }

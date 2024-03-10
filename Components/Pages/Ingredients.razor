@@ -1,0 +1,16 @@
+﻿@page "/ingredients"
+@using RecipeBook.Data
+
+<h3>Ingredients</h3>
+<ul class="list-unstyled">
+    @foreach (var ingredient in ingredients)
+    {
+        <li>
+            @ingredient.Name
+        </li>
+    }
+</ul>
+
+@code {
+    private List<Ingredient> ingredients = new();
+}

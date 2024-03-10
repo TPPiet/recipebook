@@ -112,7 +112,7 @@ else
         // Set Id to 0 so we know it is a new recipe
         objRecipe.Id = 0;
         //initialize the ingredient list
-        objRecipe.Ingredients = new List<Ingredient>();
+        objRecipe.Ingredients = new List<RecipeIngredient>();
         // Open the Popup
         ShowPopup = true;
     }
@@ -145,7 +145,7 @@ else
 
     void AddIngredient()
     {
-        var newIngredient = new Ingredient();
+        var newIngredient = new RecipeIngredient();
         objRecipe.Ingredients.Add(newIngredient);
     }
 

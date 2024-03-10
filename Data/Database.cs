@@ -23,7 +23,7 @@ public class Database
         //Create database and Recipe table
         connection = new SQLiteAsyncConnection(_dbPath);
         await connection.CreateTableAsync<Recipe>();
-        await connection.CreateTableAsync<Ingredient>();
+        await connection.CreateTableAsync<RecipeIngredient>();
     }
 
     //Fetches recipes
@@ -58,14 +58,14 @@ public class Database
     }
 
     //Fetches ingredients
-    public async Task<List<Ingredient>> GetIngredientAsync(int recipeId)
+    public async Task<List<RecipeIngredient>> GetIngredientAsync(int recipeId)
     {
         await InitAsync();
-        return await connection.Table<Ingredient>().Where(i => i.RecipeId == recipeId).ToListAsync();
+        return await connection.Table<RecipeIngredient>().Where(i => i.RecipeId == recipeId).ToListAsync();
     }
 
     //Creates a new Ingredient to the database
-    public async Task<List<Ingredient>> SaveIngredientsAsync(List<Ingredient> ingredients, int recipeId)
+    public async Task<List<RecipeIngredient>> SaveIngredientsAsync(List<RecipeIngredient> ingredients, int recipeId)
     {
         foreach (var ingredient in ingredients)
         {
@@ -76,14 +76,14 @@ public class Database
     }
 
     //Update a Ingredient
-    public async Task<List<Ingredient>> UpdateIngredientsAsync(List<Ingredient> ingredients, int recipeid)
+    public async Task<List<RecipeIngredient>> UpdateIngredientsAsync(List<RecipeIngredient> ingredients, int recipeid)
     {
         await DeleteAllIngredientsAsync(recipeid);
         return await SaveIngredientsAsync(ingredients, recipeid);
     }
 
     // delete an ingredient
-    public async Task<Ingredient> DeleteIngredientAsync(Ingredient ingredient)
+    public async Task<RecipeIngredient> DeleteIngredientAsync(RecipeIngredient ingredient)
     {
         await connection.DeleteAsync(ingredient);
         return ingredient;
@@ -93,6 +93,6 @@ public class Database
     public async Task DeleteAllIngredientsAsync(int recipeId)
     {
         await InitAsync();
-        await connection.Table<Ingredient>().DeleteAsync(i => i.RecipeId == recipeId);
+        await connection.Table<RecipeIngredient>().DeleteAsync(i => i.RecipeId == recipeId);
     }
 }
