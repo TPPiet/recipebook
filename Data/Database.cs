@@ -24,6 +24,7 @@ public class Database
         connection = new SQLiteAsyncConnection(_dbPath);
         await connection.CreateTableAsync<Recipe>();
         await connection.CreateTableAsync<RecipeIngredient>();
+        await connection.CreateTableAsync<Ingredient>();
     }
 
     //Fetches recipes
@@ -37,14 +38,14 @@ public class Database
     public async Task<Recipe> CreateRecipeAsync(Recipe recipe)
     {
         await connection.InsertAsync(recipe);
-        await SaveIngredientsAsync(recipe.Ingredients, recipe.Id);
+        await SaveRecipeIngredientsAsync(recipe.Ingredients, recipe.Id);
         return recipe;
     }
 
     //Update a recipe
     public async Task<Recipe> UpdateRecipeAsync(Recipe recipe)
     {
-        await UpdateIngredientsAsync(recipe.Ingredients, recipe.Id);
+        await UpdateRecipeIngredientsAsync(recipe.Ingredients, recipe.Id);
         await connection.UpdateAsync(recipe);
         return recipe;
     }
@@ -52,20 +53,20 @@ public class Database
     // delete a recipe and it's ingredients
     public async Task<Recipe> DeleteRecipeAsync(Recipe recipe)
     {
-        await DeleteAllIngredientsAsync(recipe.Id);
+        await DeleteAllRecipeIngredientsAsync(recipe.Id);
         await connection.DeleteAsync(recipe);
         return recipe;
     }
 
     //Fetches ingredients
-    public async Task<List<RecipeIngredient>> GetIngredientAsync(int recipeId)
+    public async Task<List<RecipeIngredient>> GetRecipeIngredientAsync(int recipeId)
     {
         await InitAsync();
         return await connection.Table<RecipeIngredient>().Where(i => i.RecipeId == recipeId).ToListAsync();
     }
 
     //Creates a new Ingredient to the database
-    public async Task<List<RecipeIngredient>> SaveIngredientsAsync(List<RecipeIngredient> ingredients, int recipeId)
+    public async Task<List<RecipeIngredient>> SaveRecipeIngredientsAsync(List<RecipeIngredient> ingredients, int recipeId)
     {
         foreach (var ingredient in ingredients)
         {
@@ -76,23 +77,56 @@ public class Database
     }
 
     //Update a Ingredient
-    public async Task<List<RecipeIngredient>> UpdateIngredientsAsync(List<RecipeIngredient> ingredients, int recipeid)
+    public async Task<List<RecipeIngredient>> UpdateRecipeIngredientsAsync(List<RecipeIngredient> ingredients, int recipeid)
     {
-        await DeleteAllIngredientsAsync(recipeid);
-        return await SaveIngredientsAsync(ingredients, recipeid);
+        await DeleteAllRecipeIngredientsAsync(recipeid);
+        return await SaveRecipeIngredientsAsync(ingredients, recipeid);
     }
 
     // delete an ingredient
-    public async Task<RecipeIngredient> DeleteIngredientAsync(RecipeIngredient ingredient)
+    public async Task<RecipeIngredient> DeleteRecipeIngredientAsync(RecipeIngredient ingredient)
     {
         await connection.DeleteAsync(ingredient);
         return ingredient;
     }
 
     // delete all ingredients of a recipe to be deleted
-    public async Task DeleteAllIngredientsAsync(int recipeId)
+    public async Task DeleteAllRecipeIngredientsAsync(int recipeId)
     {
         await InitAsync();
         await connection.Table<RecipeIngredient>().DeleteAsync(i => i.RecipeId == recipeId);
+    }
+
+    /*
+     * 
+     * Ingredient methods
+     * 
+     */
+    public async Task<Ingredient> CreateIngredientAsync(Ingredient ingredient)
+    {
+        await connection.InsertAsync(ingredient);
+        return ingredient;
+    }
+
+    public async Task<Ingredient> GetIngredientAsync(int id)
+    {
+        return await connection.GetAsync<Ingredient>(id);
+    }
+
+    public async Task<List<Ingredient>> GetAllIngredientsAsync()
+    {
+        await InitAsync();
+        return await connection.Table<Ingredient>().ToListAsync();
+    }
+
+    public async Task<Ingredient> UpdateIngredientAsync(Ingredient ingredient)
+    {
+        await connection.UpdateAsync(ingredient);
+        return ingredient;
+    }
+
+    public async Task DeleteIngredientAsync(Ingredient ingredient)
+    {
+        await connection.DeleteAsync(ingredient);
     }
 }
