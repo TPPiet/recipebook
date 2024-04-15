@@ -2,137 +2,124 @@
 @using RecipeBook.Data
 @inject Database DBService
 
-<h3>Ingredients</h3>
-<p>
-    <button class="btn btn-success"
-            @onclick="AddNewIngredients">
-        Add New Ingredients
-    </button>
-</p>
+<PageTitle>Ingredients</PageTitle>
 
-<ul class="list-unstyled">
+<Button Color="Color.Primary" Clicked="AddNewIngredients">
+    Add New Ingredients
+</Button>
+
+<ListGroup Mode="ListGroupMode.Selectable">
     @foreach (var ingredient in objIngredients)
     {
-        <li>
+        <ListGroupItem Name="@ingredient.Id.ToString()" Clicked="() => EditIngredient(ingredient)">
             @ingredient.Name
             @ingredient.Amount
             @ingredient.Unit
-            <button class="btn btn-secondary" @onclick="() => EditIngredient(ingredient)">Edit</button>
-        </li>
+        </ListGroupItem>
     }
-</ul>
+</ListGroup>
 
-@if (ShowEditPopup)
-{
-    <div class="modal" tabindex="-1" style="display:flex" role="dialog">
-        <div class="modal-dialog">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h3 class="modal-title">Edit @objIngredient.Name</h3>
-                    <button type="button" class="close"
-                            @onclick="CloseEditPopup">
-                        <span aria-hidden="true">X</span>
-                    </button>
-                </div>
-                <div class="modal-body">
-                    <div class="input-group">
-                        <input class="form-control" type="text"
-                               placeholder="@objIngredient.Name"
-                               @bind="objIngredient.Name" />
-                        <input class="form-control" type="text"
-                               placeholder="@objIngredient.Amount"
-                               @bind=objIngredient.Amount />
-                        <select class="form-control"
-                                @bind="objIngredient.Unit">
-                            <option value="ml">ml</option>
-                            <option value="dl">dl</option>
-                            <option value="l">l</option>
-                            <option value="g">g</option>
-                            <option value="kg">kg</option>
-                            <option value="pcs">pcs</option>
-                            <option value="tsp">tsp</option>
-                            <option value="tbsp">tbsp</option>
-                            <option value="pinch">pinch</option>
-                        </select>
-                    </div>
-                    <button class="btn btn-success"
-                        @onclick="(() => DBSaveIngredient(objIngredient))">
-                        Save
-                    </button>
-                    <button class="btn btn-danger"
-                        @onclick="(() => DBDeleteIngredient(objIngredient))">
-                        Delete
-                    </button>
-                </div>
-            </div>
-        </div>
-    </div>
-}
+<Modal @ref="editModal">
+    <ModalContent Centered>
+        <ModalHeader>
+            <ModalTitle>Edit ingredient</ModalTitle>
+                <CloseButton/>
+        </ModalHeader>
+        <ModalBody>
+            <Fields>
+                <Field>
+                    <FieldLabel RequiredIndicator> Name </FieldLabel> 
+                    <FieldBody>
+                        <TextEdit @bind-Text="SelectedIngredient.Name" Placeholder="@SelectedIngredient.Name"/>
+                    </FieldBody>
+                </Field>
+                <Field>
+                    <FieldLabel>Amount</FieldLabel>
+                    <FieldBody>
+                        <NumericEdit @bind-Value="SelectedIngredient.Amount" Placeholder="@SelectedIngredient.Amount.ToString()" />
+                    </FieldBody>
+                </Field>
+                <Field>
+                    <FieldLabel>Unit</FieldLabel>
+                    <FieldBody>
+                        <Select @bind-SelectedValue="SelectedIngredient.Unit" Placeholder="@SelectedIngredient.Unit">
+                            @foreach (var unit in units)
+                            {
+                                <SelectItem TValue="string">@unit</SelectItem>
+                            }
+                        </Select>
+                    </FieldBody>
+                </Field>
+            </Fields>
+        </ModalBody>
+        <ModalFooter>
+            <Button Color="Color.Success" Clicked="(() => DBSaveIngredient(SelectedIngredient))">
+                Save
+            </Button>
+            <Button Color="Color.Danger" Clicked="(() => DBDeleteIngredient(SelectedIngredient))">
+                Delete
+            </Button>
+        </ModalFooter>
+    </ModalContent>
+</Modal>
 
-<!-- Popup for adding a new ingredients -->
-@if (ShowAddPopup)
-{
-    <div class="modal" tabindex="-1" style="display:flex" role="dialog">
-        <div class="modal-dialog">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h3 class="modal-title">Add ingredient(s)</h3>
-                    <button type="button" class="close"
-                    @onclick="CloseAddPopup">
-                        <span aria-hidden="true">X</span>
-                    </button>
-                </div>
-                <div class="modal-body">
-                @foreach (var ingredient in newIngredients)
-                {
-                    <div class="input-group">
-                        <input class="form-control" type="text"
-                               placeholder="@ingredient.Name"
-                               @bind="ingredient.Name" />
-                        <input class="form-control" type="text"
-                               placeholder="@ingredient.Amount"
-                               @bind=ingredient.Amount/>
-                        <select class="form-control"
-                                placeholder="@ingredient.Unit"
-                                @bind="ingredient.Unit">
-                            <option value="ml">ml</option>
-                            <option value="dl">dl</option>
-                            <option value="l">l</option>
-                            <option value="g">g</option>
-                            <option value="kg">kg</option>
-                            <option value="pcs">pcs</option>
-                            <option value="tsp">tsp</option>
-                            <option value="tbsp">tbsp</option>
-                            <option value="pinch">pinch</option>
-                        </select>
-                        <button class="btn btn-danger"
-                            @onclick="(() => RemoveFromList(ingredient))" >
+<Modal @ref="addModal">
+    <ModalContent Centered>
+        <ModalHeader>
+            <ModalTitle>Add ingredient(s)</ModalTitle>
+            <CloseButton />
+        </ModalHeader>
+        <ModalBody>
+            @foreach (var ingredient in newIngredients)
+            {
+                <Fields>
+                    <Field>
+                        <FieldBody>
+                            <TextEdit Placeholder="Name" @bind-Text="ingredient.Name"/>
+                        </FieldBody>
+                    </Field>
+                    <Field>
+                        <FieldBody>
+                            <NumericEdit Placeholder="Amount" @bind-Value="ingredient.Amount" />
+                        </FieldBody>
+                    </Field>
+                    <Field>
+                        <FieldBody>
+                            <Select @bind-SelectedValue="ingredient.Unit">
+                                @foreach (var unit in units)
+                                    {
+                                        <SelectItem TValue="string">@unit</SelectItem>
+                                    }
+                            </Select>
+                        </FieldBody>
+                    </Field>
+                    <Field>
+                        <Button Color="Color.Danger" Clicked="(() => RemoveFromList(ingredient))">
                             X
-                        </button>
-                    </div>
-                    }
-                    <button class="btn btn-primary"
-                        @onclick="CreateNewIngredient">
-                        Add a new ingredient
-                    </button>
-                    <button class="btn btn-success"
-                        @onclick="(() => SaveListOfIngredients(newIngredients))">
-                        Save
-                    </button>
-                    
-                </div>
-            </div>
-        </div>
-    </div>
-}
+                        </Button>
+                    </Field>
+                </Fields>
+            }
+        </ModalBody>
+        <ModalFooter>
+            <Button Color="Color.Primary" Clicked="@CreateNewIngredient">
+                Add Another Ingredient
+            </Button>
+            <Button Color="Color.Success" Clicked="(() => SaveListOfIngredients(newIngredients))">
+                Save
+            </Button>
+        </ModalFooter>
+    </ModalContent>
+</Modal>
 
 @code {
     private List<Ingredient> objIngredients = new();
     private List<Ingredient> newIngredients = new();
-    Ingredient objIngredient = new Ingredient();
-    bool ShowAddPopup = false;
-    bool ShowEditPopup = false;
+    Ingredient SelectedIngredient = new Ingredient();
+    private Modal editModal;
+    private Modal addModal;
     string Error = "";
+    private List<String> units = Data.Units.IngredientList;
 
     protected override async Task OnInitializedAsync()
     {
@@ -144,7 +131,7 @@
     {
         CreateNewIngredient();
         // Open the Popup
-        ShowAddPopup = true;
+        ShowAddModal();
     }
 
     private void CreateNewIngredient()
@@ -156,27 +143,36 @@
 
     async Task SaveListOfIngredients(List<Ingredient> ingredients)
     {
-        ShowAddPopup = false;
+        await HideAddModal();
         if(ingredients.Count == 0)
         {
-
             return;
         }
         else
         {
+            //check if the ingredient is empty, and remove empty ones
+            for(int i=ingredients.Count -1; i >= 0; i--)
+            {
+                if (ingredients[i] == null || string.IsNullOrEmpty(ingredients[i].Name))
+                {
+                    ingredients.RemoveAt(i);
+                }
+            }
+
             foreach (var ingredient in ingredients)
             {
-                // check if the ingredient is empty 
-                if (ingredient == null || string.IsNullOrEmpty(ingredient.Name))
-                {
-                    continue;
-                }
+                var existingIngredient = objIngredients.Find(i => i.Name == ingredient.Name);
 
-                if (objIngredients.Any(i => i.Name == ingredient.Name))
+                if (existingIngredient != null)
                 {
-                    // Add proper handling with a dialog box to ask user if they want to add increase the amount or replace the existing one
-                    //Blazorise Validation could work
-                    continue;
+                    //For now if the ingredient name is same as an existing one, the amount will be increased
+                    //Improve by asking user if amount should be increased or replaced, Blazorise Validation could work
+                    // NEED TO ADD UNIT CONVERSION
+                    if (existingIngredient.Unit.Equals(ingredient.Unit))
+                    {
+                        existingIngredient.Amount += ingredient.Amount;
+                        await DBService.UpdateIngredientAsync(existingIngredient);
+                    }
                 }
                 else
                 {
@@ -185,7 +181,7 @@
             }
             ingredients.Clear();
         }
-        
+
     }
 
     private void RemoveFromList(Ingredient ingredient)
@@ -195,13 +191,13 @@
 
     private void EditIngredient(Ingredient ingredient)
     {
-        objIngredient = ingredient;
-        ShowEditPopup = true;
+        SelectedIngredient = ingredient;
+        ShowEditModal();
     }
 
     async Task DBSaveIngredient(Ingredient ingredient)
     {
-        ShowEditPopup = false;
+        await HideEditModal();
 
         try
         {
@@ -216,6 +212,7 @@
             else
             {
                 //Updating existing ingredient
+                Console.WriteLine(ingredient);
                 await DBService.UpdateIngredientAsync(ingredient);
             }
             objIngredients = await DBService.GetAllIngredientsAsync();
@@ -228,7 +225,7 @@
 
     async Task DBDeleteIngredient(Ingredient ingredient)
     {
-        ShowEditPopup = false;
+        await HideEditModal();
         try
         {
             Error="";
@@ -242,13 +239,23 @@
         
     }
 
-    private void CloseAddPopup()
+    private Task ShowEditModal()
     {
-        ShowAddPopup = false;
+        return editModal.Show();
     }
 
-    private void CloseEditPopup()
+    private Task HideEditModal()
     {
-        ShowEditPopup = false;
+        return editModal.Hide();
+    }
+
+    private Task ShowAddModal()
+    {
+        return addModal.Show();
+    }
+
+    private Task HideAddModal()
+    {
+        return addModal.Hide();
     }
 }

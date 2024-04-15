@@ -2,103 +2,97 @@
 @using RecipeBook.Data
 @inject Database DBService
 
-<h1>Recipes</h1>
-<p style="color:red">@Error</p>
+<PageTitle>Recipes</PageTitle>
 
 @if (recipes == null)
 {
 	<!-- Show this if theres no recipes -->
-    <p><em>No recipes</em></p>
+    <Paragraph>No recipes</Paragraph>
 }
 else
 {
     @foreach (var recipe in recipes)
     {
-        <p>
+        <Paragraph>
             @recipe.Name
-            <button class="btn btn-secondary" @onclick="() => EditRecipe(recipe)">Edit</button>
-        </p>
+            <Button Color="Color.Primary" Clicked="() => EditRecipe(recipe)">Edit</Button>
+        </Paragraph>
     }
 
-    <p>
-        <button class="btn btn-success"
-            @onclick="AddNewRecipe">
-            Add New Recipe
-        </button>
-    </p>
+    <Paragraph>
+        <Button Color="Color.Success"
+            Clicked="AddNewRecipe">
+            Add a New Recipe
+        </Button>
+    </Paragraph>
 }
 
-<!-- Popup for adding a new recipe -->
-@if (ShowPopup)
-{
-    <div class="modal" tabindex="-1" style="display:block" role="dialog">
-        <div class="modal-dialog">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h3 class="modal-title">Add or edit a recipe</h3>
-                    <!-- Button to close the popup -->
-                    <button type="button" class="close"
-                            @onclick="ClosePopup">
-                        <span aria-hidden="true">X</span>
-                    </button>
-                </div>
-                <!-- Edit form for the recipe -->
-                <div class="modal-body">
-                    <input class="form-control" type="text"
-                           placeholder="Name"
-                           @bind="objRecipe.Name" />
+<Modal @ref="addModal">
+    <ModalContent Centered>
+        <ModalHeader>
+            <ModalTitle>Add a New Recipe</ModalTitle>
+            <CloseButton />
+        </ModalHeader>
+        <ModalBody>
+            <Field>
+                <FieldBody>
+                    <TextEdit Placeholder="Recipe Name" @bind-Text="objRecipe.Name" />
+                </FieldBody>
+            </Field>
+            @foreach (var ingredient in objIngredients)
+            {
+                <Fields>
+                    <Field>
+                        <FieldBody>
+                            <TextEdit Placeholder="Name" @bind-Text="ingredient.Name" />
+                        </FieldBody>
+                    </Field>
+                    <Field>
+                        <FieldBody>
+                            <NumericEdit Placeholder="Amount" @bind-Value="ingredient.Amount" />
+                        </FieldBody>
+                    </Field>
+                    <Field>
+                        <FieldBody>
+                            <Select @bind-SelectedValue="ingredient.Unit">
+                                @foreach (var unit in units)
+                                {
+                                    <SelectItem TValue="string">@unit</SelectItem>
+                                }
+                            </Select>
+                        </FieldBody>
+                    </Field>
+                </Fields>
+            }
+        </ModalBody>
+        <ModalFooter>
+            <Button Color="Color.Primary" Clicked="AddIngredient">
+                Add an ingredient
+            </Button>
+            <!-- Add rest of the attributes for recipe-->
+            <!-- Button to save the Recipe -->
+            <Button Color="Color.Success" Clicked="SaveRecipe">
+                Save
+            </Button>
+            @if (objRecipe.Id > 0)
+            {
+                <!-- Button to delete the recipe -->
+                <Button Color="Color.Danger" Clicked="DeleteRecipe">
+                    Delete
+                </Button>
+            }
+        </ModalFooter>
+    </ModalContent>
+</Modal>
 
-                    @foreach (var ingredient in objRecipe.Ingredients)
-                    {
-                        <div class="input-group">
-                            <input class="form-control" type="text"
-                                   placeholder="Ingredient name"
-                                   @bind="ingredient.Name" />
-                            <input class="form-control" type="number"
-                                   placeholder="Amount"
-                                   @bind="ingredient.Amount" />
-                            <select class="form-control"
-                                   @bind="ingredient.Unit">
-                                   <option value="ml">ml</option>
-                                   <option value="dl">dl</option>
-                                   <option value="l">l</option>
-                                   <option value="g">g</option>
-                                   <option value="kg">kg</option>
-                                   <option value="pcs">pcs</option>
-                                   <option value="tsp">tsp</option>
-                                   <option value="tbsp">tbsp</option>
-                                   <option value="pinch">pinch</option>
-                            </select>
-                         </div>
-                    }
-                    <button class="btn btn-primary"
-                            @onclick="AddIngredient">
-                            Add an ingredient
-                    </button>
-                    <!-- Add rest of the attributes for recipe-->
-                    <!-- Button to save the Recipe -->
-                    <button class="btn btn-success"
-                            @onclick="SaveRecipe">
-                            Save
-                    </button>
-                    @if (objRecipe.Id > 0)
-                    {
-                        <!-- Button to delete the recipe -->
-                        <button class="btn btn-danger"
-                                @onclick="DeleteRecipe">
-                            Delete
-                        </button>
-                    }
-                </div>
-            </div>
-        </div>
-    </div>
-}
+
 @code {
     string Error = "";
     List<Recipe> recipes = new List<Recipe>();
     Recipe objRecipe = new Recipe();
-    bool ShowPopup = false;
+    private Modal addModal;
+    private List<RecipeIngredient> objIngredients = new();
+    private List<String> units = Data.Units.IngredientList;
     protected override async Task OnInitializedAsync()
     {
         //Fetch recipes
@@ -113,8 +107,10 @@ else
         objRecipe.Id = 0;
         //initialize the ingredient list
         objRecipe.Ingredients = new List<RecipeIngredient>();
+        // Clear objIngredients
+        objIngredients.Clear();
         // Open the Popup
-        ShowPopup = true;
+        ShowAddModal();
     }
 
     async Task EditRecipe(Recipe recipe)
@@ -122,14 +118,14 @@ else
         //set as current recipe
         objRecipe = recipe;
         //get the ingredients
-        objRecipe.Ingredients = await DBService.GetRecipeIngredientAsync(recipe.Id);
-        ShowPopup = true;
+        objIngredients = await DBService.GetRecipeIngredientAsync(recipe.Id);
+        await ShowAddModal();
     }
 
     async Task DeleteRecipe()
     {
         //Close the popup
-        ShowPopup = false;
+        await HideAddModal();
         try
         {
             Error = "";
@@ -146,19 +142,13 @@ else
     void AddIngredient()
     {
         var newIngredient = new RecipeIngredient();
-        objRecipe.Ingredients.Add(newIngredient);
-    }
-
-    void ClosePopup()
-    {
-        // Close the Popup
-        ShowPopup = false;
+        objIngredients.Add(newIngredient);
     }
 
     async Task SaveRecipe()
     {
         //close the popup first
-        ShowPopup = false;
+        await HideAddModal();
 
         try
         {
@@ -168,10 +158,10 @@ else
                 //create new recipe
                 Recipe objNewRecipe = new Recipe();
                 objNewRecipe.Name = objRecipe.Name;
-                objNewRecipe.Ingredients = objRecipe.Ingredients;
+                objNewRecipe.Ingredients = objIngredients;
 
                 //Save the result to the database
-                var NewRecipe = await DBService.CreateRecipeAsync(objRecipe);
+                var NewRecipe = await DBService.CreateRecipeAsync(objNewRecipe);
                 //Add the recipe to the list
                 recipes.Add(NewRecipe);
             }
@@ -185,5 +175,15 @@ else
         {
             Error = ex.Message;
         }
+    }
+
+    private Task ShowAddModal()
+    {
+        return addModal.Show();
+    }
+
+    private Task HideAddModal()
+    {
+        return addModal.Hide();
     }
 }

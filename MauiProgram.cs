@@ -1,6 +1,8 @@
 ﻿using Microsoft.Extensions.Logging;
 using RecipeBook.Data;
-
+using Blazorise;
+using Blazorise.Tailwind;
+using Blazorise.Icons.FontAwesome;
 namespace RecipeBook
 {
     public static class MauiProgram
@@ -16,9 +18,12 @@ namespace RecipeBook
                 });
 
             builder.Services.AddMauiBlazorWebView();
-            builder.Services.AddBlazorBootstrap();
-            // Set path to the SQLite database (it will be created if it does not exist)
-            var dbPath =
+			builder.Services
+	            .AddBlazorise()
+	            .AddTailwindProviders()
+	            .AddFontAwesomeIcons();
+			// Set path to the SQLite database (it will be created if it does not exist)
+			var dbPath =
                 Path.Combine(
                     Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
                     @"Recipes.db");

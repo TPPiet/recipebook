@@ -3,35 +3,65 @@
 
 <h1>Shopping list</h1>
 
-<Button @onclick="Store">Store the ingredients</Button>
-<Button @onclick="Clear">Clear the list</Button>
+<Button Color="Color.Success" Clicked="Store">Store the ingredients</Button>
+<Button Color="Color.Danger" Clicked="Clear">Clear the list</Button>
 
-<input placeholder="Add Item" @bind="newItem" />
-<button @onclick="AddItem">Add item</button>
+<Fields>
+    <Field>
+        <FieldLabel RequiredIndicator> Name </FieldLabel>
+        <FieldBody>
+            <TextEdit @bind-Text="newIngredient.Name" Placeholder="Name" />
+        </FieldBody>
+    </Field>
+    <Field>
+        <FieldLabel>Amount</FieldLabel>
+        <FieldBody>
+            <NumericEdit @bind-Value="newIngredient.Amount" Placeholder="Amount" />
+        </FieldBody>
+    </Field>
+    <Field>
+        <FieldLabel>Unit</FieldLabel>
+        <FieldBody>
+            <Select @bind-SelectedValue="newIngredient.Unit">
+                @foreach (var unit in units)
+                {
+                    <SelectItem TValue="string">@unit</SelectItem>
+                }
+            </Select>
+        </FieldBody>
+    </Field>
+</Fields>
 
-<ul class="list-unstyled">
-    @foreach (var item in items)
+<Button Color="Color.Primary" Clicked="AddItem">Add item</Button>
+
+<ListGroup Flush Mode="ListGroupMode.Selectable">
+    @foreach (var ingredient in items)
     {
-        <li>
-            <input type="checkbox" @bind="item.IsDone" />
-            <input @bind="item.Title" />
-        </li>
+        <ListGroupItem Name="@ingredient.Id.ToString()" Clicked="() => EditIngredient(ingredient)">
+            <Check TValue="bool" Checked="@ingredient.IsDone"></Check>
+            @ingredient.Name
+            @ingredient.Amount
+            @ingredient.Unit
+        </ListGroupItem>
     }
-</ul>
+</ListGroup>
 
 
 
 @code {
-    private List<ShoppingListItem> items = new();
-    private string? newItem;
+    private List<ShoppingIngredient> items = new();
+    private ShoppingIngredient newIngredient = new ShoppingIngredient();
+    private List<String> units = Data.Units.IngredientList;
 
     private void AddItem()
     {
-        if (!string.IsNullOrWhiteSpace(newItem))
-        {
-            items.Add(new ShoppingListItem { Title = newItem });
-            newItem = string.Empty;
-        }
+        items.Add(newIngredient);
+        newIngredient = new ShoppingIngredient();
+    }
+
+    private void EditIngredient(ShoppingIngredient ingredient)
+    {
+        ingredient.IsDone = !ingredient.IsDone;
     }
 
     //Store the ingredients into ingredient bank
