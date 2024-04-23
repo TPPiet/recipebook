@@ -7,13 +7,8 @@ using SQLite;
 
 namespace RecipeBook.Data
 {
-    public class RecipeIngredient
+    public class RecipeIngredient : Ingredient
     {
-        [PrimaryKey, AutoIncrement]
-        public int Id { get; set; }
         public int RecipeId { get; set; }
-        public string Name { get; set; }
-        public double Amount { get; set; }
-        public string Unit { get; set; }
     }
 }

@@ -30,46 +30,102 @@ else
 <Modal @ref="addModal">
     <ModalContent Centered>
         <ModalHeader>
-            <ModalTitle>Add a New Recipe</ModalTitle>
+            @if (objRecipe.Id == 0)
+            {
+                <ModalTitle>Add a New Recipe</ModalTitle>
+            }
+            else
+            {
+                <ModalTitle>@objRecipe.Name</ModalTitle>
+            }
+
             <CloseButton />
         </ModalHeader>
         <ModalBody>
-            <Field>
-                <FieldBody>
-                    <TextEdit Placeholder="Recipe Name" @bind-Text="objRecipe.Name" />
-                </FieldBody>
-            </Field>
-            @foreach (var ingredient in objIngredients)
-            {
-                <Fields>
-                    <Field>
-                        <FieldBody>
-                            <TextEdit Placeholder="Name" @bind-Text="ingredient.Name" />
-                        </FieldBody>
-                    </Field>
-                    <Field>
-                        <FieldBody>
-                            <NumericEdit Placeholder="Amount" @bind-Value="ingredient.Amount" />
-                        </FieldBody>
-                    </Field>
-                    <Field>
-                        <FieldBody>
-                            <Select @bind-SelectedValue="ingredient.Unit">
-                                @foreach (var unit in units)
-                                {
-                                    <SelectItem TValue="string">@unit</SelectItem>
-                                }
-                            </Select>
-                        </FieldBody>
-                    </Field>
-                </Fields>
-            }
+            <Tabs SelectedTab="@selectedTab" SelectedTabChanged="@OnSelectedTabChanged">
+                <Items>
+                    <Tab Name="ingredients">Ingredients</Tab>
+                    <Tab Name="instructions">Instructions</Tab>
+                </Items>
+                <Content>
+                    <TabPanel Name="ingredients">
+                        <Field>
+                            <FieldBody>
+                                <TextEdit Placeholder="Recipe Name" @bind-Text="objRecipe.Name" />
+                            </FieldBody>
+                        </Field>
+                        @foreach (var ingredient in objIngredients)
+                        {
+                            <Fields>
+                                <Field>
+                                    <FieldBody>
+                                        <TextEdit Placeholder="Name" @bind-Text="ingredient.Name" />
+                                    </FieldBody>
+                                </Field>
+                                <Field>
+                                    <FieldBody>
+                                        <NumericEdit Placeholder="Amount" @bind-Value="ingredient.Amount" />
+                                    </FieldBody>
+                                </Field>
+                                <Field>
+                                    <FieldBody>
+                                        <Select @bind-SelectedValue="ingredient.Unit">
+                                            @foreach (var unit in units)
+                                            {
+                                                <SelectItem TValue="string">@unit</SelectItem>
+                                            }
+                                        </Select>
+                                    </FieldBody>
+                                </Field>
+                                <Field>
+                                    <Button Color="Color.Warning"
+                                            Clicked="() => DeleteIngredient(ingredient)">
+                                        X
+                                    </Button>
+                                </Field>
+                            </Fields>
+                        }
+                    </TabPanel>
+                    <TabPanel Name="instructions">
+                        @foreach (var instruction in objInstructions)
+                        {
+                            
+                            <Fields>
+                                <Field ColumnSize="ColumnSize.Is1" Position="Position.Relative">
+                                    <FieldBody>
+                                        @(objInstructions.IndexOf(instruction) + 1+".")
+                                    </FieldBody>
+                                </Field>
+                                <Field>
+                                    <FieldBody ColumnSize="ColumnSize.Is10" Position="Position.Relative">
+                                        <MemoEdit AutoSize="true" Size="Size.Small" Placeholder="Add an instruction" @bind-Text="instruction.InstructionText" />
+                                    </FieldBody>
+                                </Field>
+                                <Field ColumnSize="ColumnSize.Is1" Position="Position.Relative">
+                                    <Button Color="Color.Warning"
+                                            Clicked="() => DeleteInstruction(instruction)">
+                                        X
+                                    </Button>
+                                </Field>
+                            </Fields>
+                        }
+                    </TabPanel>
+                </Content>
+            </Tabs>
+            
         </ModalBody>
         <ModalFooter>
-            <Button Color="Color.Primary" Clicked="AddIngredient">
-                Add an ingredient
-            </Button>
-            <!-- Add rest of the attributes for recipe-->
+            @if (selectedTab.Equals("ingredients"))
+            {
+                <Button Color="Color.Primary" Clicked="AddIngredient">
+                    Add an ingredient
+                </Button>
+            }else if (selectedTab.Equals("instructions"))
+            {
+                <Button Color="Color.Primary" Clicked="AddInstruction">
+                    Add an instruction
+                </Button>
+            }
             <!-- Button to save the Recipe -->
             <Button Color="Color.Success" Clicked="SaveRecipe">
                 Save
@@ -92,7 +148,9 @@ else
     Recipe objRecipe = new Recipe();
     private Modal addModal;
     private List<RecipeIngredient> objIngredients = new();
+    private List<Instruction> objInstructions = new();
     private List<String> units = Data.Units.IngredientList;
+    string selectedTab = "ingredients";
     protected override async Task OnInitializedAsync()
     {
         //Fetch recipes
@@ -107,8 +165,11 @@ else
         objRecipe.Id = 0;
         //initialize the ingredient list
         objRecipe.Ingredients = new List<RecipeIngredient>();
+        //initialize the instructions list
+        objRecipe.Instructions = new List<Instruction>();
         // Clear objIngredients
         objIngredients.Clear();
+        objInstructions.Clear();
         // Open the Popup
         ShowAddModal();
     }
@@ -117,9 +178,10 @@ else
     {
         //set as current recipe
         objRecipe = recipe;
-        //get the ingredients
+        //get the ingredients and instructions
         objIngredients = await DBService.GetRecipeIngredientAsync(recipe.Id);
-        await ShowAddModal();
+        objInstructions = await DBService.GetRecipeInstructionsAsync(recipe.Id);
+    ShowAddModal();
     }
 
     async Task DeleteRecipe()
@@ -145,6 +207,22 @@ else
         objIngredients.Add(newIngredient);
     }
 
+    void DeleteIngredient(RecipeIngredient ingredient)
+    {
+        objIngredients.Remove(ingredient);
+    }
+
+    void AddInstruction()
+    {
+        var newInstruction = new Instruction();
+        objInstructions.Add(newInstruction);
+    }
+
+    void DeleteInstruction(Instruction instruction)
+    {
+        objInstructions.Remove(instruction);
+    }
+
     async Task SaveRecipe()
     {
         //close the popup first
@@ -159,6 +237,7 @@ else
                 Recipe objNewRecipe = new Recipe();
                 objNewRecipe.Name = objRecipe.Name;
                 objNewRecipe.Ingredients = objIngredients;
+                objNewRecipe.Instructions = objInstructions;
 
                 //Save the result to the database
                 var NewRecipe = await DBService.CreateRecipeAsync(objNewRecipe);
@@ -168,6 +247,8 @@ else
             else
             {
                 //Updating existing recipe
+                objRecipe.Ingredients = objIngredients;
+                objRecipe.Instructions = objInstructions;
                 await DBService.UpdateRecipeAsync(objRecipe);
             }
         }
@@ -185,5 +266,11 @@ else
     private Task HideAddModal()
     {
         return addModal.Hide();
+    }
+
+    private Task OnSelectedTabChanged(string name)
+    {
+        selectedTab = name;
+        return Task.CompletedTask;
     }
 }

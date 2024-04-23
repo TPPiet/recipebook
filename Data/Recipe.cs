@@ -12,7 +12,9 @@ public class Recipe
     [PrimaryKey, AutoIncrement]
     public int Id { get; set; }
     public string Name { get; set; }
-    public string Instructions { get; set; }
+
+    [Ignore]
+    public List<Instruction> Instructions { get; set; }
 
     [Ignore]
     public List<RecipeIngredient> Ingredients { get; set; }
