@@ -14,12 +14,12 @@ Done:
 - SQLite db creation and CRUD
 - Recipe page, adding, editing, and deleting recipes
 - Shopping list page, list with checkbox
-- Add rest of the definitions for recipe (ingredients, amounts, instructions)
+- Added rest of the definitions for recipe (ingredients, amounts, instructions)
 - Ingredients SQLite table and methods added
+- Ingredient storage page, adding ingredients
+- Changed Framework to Blazorise
 
 TODO next:
-
 - Viewing recipe, new page with active recipe, to allow browsing and coming back to it
 - Add recipe ingredients to the shopping list
-- Ingredient storage
 - Add bought ingredients from shopping list to ingredient storage
